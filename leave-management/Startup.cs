@@ -44,6 +44,9 @@ namespace leave_management
                     Configuration.GetConnectionString("DefaultConnection")));
             }
 
+            Test(services);
+            // services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
+
 
             //Add reference for Repository and Contracts to Startup File
             services.AddScoped<ILeaveTypeRepository, LeaveTypeRepository>();
@@ -64,7 +67,7 @@ namespace leave_management
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(
-            IApplicationBuilder app, 
+            IApplicationBuilder app,
             IWebHostEnvironment env,
             UserManager<Employee> userManager,
             RoleManager<IdentityRole> roleManager
@@ -81,6 +84,13 @@ namespace leave_management
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.Migrate();
+            }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -98,6 +108,10 @@ namespace leave_management
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+        }
+        void Test(IServiceCollection services)
+        {
+            services.BuildServiceProvider();
         }
     }
 }
